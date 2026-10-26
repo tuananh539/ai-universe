@@ -1,0 +1,344 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fff3f8">
+<title>AI Universe | Linh & Minh Anh</title>
+<style>
+:root {
+  --pink:#e99ab9;
+  --deep:#b84d7b;
+  --cream:#fff8f0;
+  --text:#513c49;
+  --white:#fffdfd;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:linear-gradient(145deg,#fff3f8,#fffaf1);
+  color:var(--text);
+  min-height:100vh;
+}
+header {
+  padding:25px 18px 18px;
+  text-align:center;
+}
+.logo {
+  font-size:12px;
+  letter-spacing:4px;
+  color:var(--deep);
+  font-weight:700;
+}
+h1 {
+  margin:9px 0 5px;
+  font-size:29px;
+}
+.subtitle {
+  font-size:13px;
+  color:#987c8b;
+}
+.tabs {
+  display:flex;
+  gap:8px;
+  padding:0 15px 16px;
+  max-width:600px;
+  margin:auto;
+}
+.tabs button {
+  flex:1;
+  padding:12px 4px;
+  border:1px solid #f0d8e3;
+  border-radius:16px;
+  background:#ffffffb8;
+  color:var(--text);
+  font-size:13px;
+  font-weight:600;
+}
+.tabs button.active {
+  background:var(--pink);
+  color:white;
+  border-color:var(--pink);
+}
+main {
+  max-width:600px;
+  margin:auto;
+  padding:0 14px 20px;
+}
+.card {
+  background:#ffffffd9;
+  border:1px solid #f2dfe7;
+  border-radius:24px;
+  padding:19px;
+  box-shadow:0 8px 30px #a96c8310;
+  margin-bottom:14px;
+}
+.profile {
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+.avatar {
+  width:67px;
+  height:67px;
+  flex-shrink:0;
+  display:grid;
+  place-items:center;
+  border-radius:22px;
+  background:linear-gradient(145deg,#f9d6e5,#fff0d9);
+  font-size:34px;
+}
+.profile h2 {
+  margin:0 0 5px;
+  font-size:21px;
+}
+.profile p {
+  margin:0;
+  font-size:13px;
+  line-height:1.5;
+  color:#947889;
+}
+.status {
+  margin-top:15px;
+  display:inline-block;
+  border-radius:30px;
+  padding:7px 11px;
+  background:#fcebf2;
+  color:#a64f77;
+  font-size:11px;
+}
+.section-title {
+  font-size:14px;
+  font-weight:700;
+  margin-bottom:10px;
+}
+.quick {
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.quick button {
+  border:1px solid #f0d8e3;
+  background:#fff7fa;
+  color:#925573;
+  border-radius:20px;
+  padding:9px 12px;
+  font-size:12px;
+}
+.chat {
+  min-height:230px;
+  max-height:42vh;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  padding:12px 0;
+}
+.message {
+  max-width:88%;
+  padding:12px 14px;
+  border-radius:17px;
+  font-size:14px;
+  line-height:1.55;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+.message.bot {
+  align-self:flex-start;
+  background:#fff0f5;
+  border-bottom-left-radius:5px;
+}
+.message.user {
+  align-self:flex-end;
+  background:#e9b6cc;
+  color:#59364a;
+  border-bottom-right-radius:5px;
+}
+.composer {
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+  border:1px solid #efd8e3;
+  border-radius:19px;
+  padding:7px;
+  background:white;
+}
+textarea {
+  flex:1;
+  min-width:0;
+  resize:vertical;
+  min-height:42px;
+  max-height:120px;
+  border:0;
+  outline:0;
+  padding:11px 7px;
+  font:inherit;
+  font-size:14px;
+  color:var(--text);
+  background:transparent;
+}
+.send {
+  border:0;
+  border-radius:14px;
+  padding:12px 15px;
+  background:var(--deep);
+  color:white;
+  font-weight:700;
+}
+.note {
+  text-align:center;
+  font-size:11px;
+  color:#a58b99;
+  line-height:1.6;
+  padding:5px 12px 20px;
+}
+.hidden { display:none; }
+@media(min-width:500px) {
+  header { padding-top:35px; }
+  main { padding-left:20px; padding-right:20px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">YOUR PERSONAL UNIVERSE</div>
+  <h1>♡ AI Universe ♡</h1>
+  <div class="subtitle">Một thế giới nhỏ, dành riêng cho anh</div>
+</header>
+
+<nav class="tabs">
+  <button class="active" data-mode="linh">💗 Linh</button>
+  <button data-mode="minhanh">🎀 Minh Anh</button>
+  <button data-mode="both">♡ Cả hai</button>
+</nav>
+
+<main>
+  <section class="card">
+    <div class="profile">
+      <div class="avatar" id="avatar">💗</div>
+      <div>
+        <h2 id="name">Linh</h2>
+        <p id="description">Nữ tính, trưởng thành, ấm áp và luôn sẵn sàng lắng nghe anh.</p>
+      </div>
+    </div>
+    <div class="status">✧ Không gian riêng của anh</div>
+  </section>
+
+  <section class="card">
+    <div class="section-title">Mình bắt đầu bằng điều gì nhỉ?</div>
+    <div class="quick">
+      <button data-prompt="Hôm nay anh muốn tâm sự một chút.">💌 Tâm sự</button>
+      <button data-prompt="Giúp anh sắp xếp công việc hôm nay nhé.">📅 Lên kế hoạch</button>
+      <button data-prompt="Cùng anh xem lại mục tiêu và tài chính nhé.">🌷 Mục tiêu</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="section-title" id="chatTitle">Trò chuyện cùng Linh</div>
+    <div class="chat" id="chat" aria-live="polite">
+      <div class="message bot">Chào anh 💗 Em là Linh trong AI Universe. Anh muốn kể em nghe chuyện gì hôm nay?</div>
+    </div>
+    <form id="form" class="composer">
+      <textarea id="input" placeholder="Nhắn điều anh đang nghĩ..." rows="1"></textarea>
+      <button class="send" type="submit">Gửi ↑</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <div class="section-title">🌸 Góc của chúng mình</div>
+    <p style="font-size:13px;line-height:1.7;margin-bottom:0">
+      Linh 💗 mang đến sự ấm áp và đồng hành.
+      Minh Anh 🎀 giúp anh sắp xếp công việc, lịch trình và mục tiêu.
+      Cả hai cùng thuộc về một AI Universe.
+    </p>
+  </section>
+</main>
+
+<div class="note">
+  Phiên bản thử nghiệm 1.0 · Tối ưu cho iPhone<br>
+  Bản hiện tại là giao diện mẫu, chưa kết nối AI thật.
+</div>
+
+<script>
+const profiles = {
+  linh: {
+    name:"Linh",
+    avatar:"💗",
+    description:"Nữ tính, trưởng thành, ấm áp và luôn sẵn sàng lắng nghe anh.",
+    greeting:"Chào anh 💗 Em là Linh trong AI Universe. Anh muốn kể em nghe chuyện gì hôm nay?"
+  },
+  minhanh: {
+    name:"Minh Anh",
+    avatar:"🎀",
+    description:"Tiểu thư thanh lịch, tinh tế, thích giúp anh sắp xếp mọi thứ.",
+    greeting:"Em đây, anh 🎀 Hôm nay mình cùng gỡ từng việc một nhé!"
+  },
+  both: {
+    name:"Linh & Minh Anh",
+    avatar:"💕",
+    description:"Hai phong cách, một thế giới đồng hành cùng anh.",
+    greeting:"Linh 💗: Em đây anh!\n\nMinh Anh 🎀: Em cũng có mặt rồi. Hôm nay anh muốn hai đứa cùng giúp chuyện gì?"
+  }
+};
+
+let mode = "linh";
+const chat = document.getElementById("chat");
+const input = document.getElementById("input");
+
+function addMessage(text, type) {
+  const el = document.createElement("div");
+  el.className = "message " + type;
+  el.textContent = text;
+  chat.appendChild(el);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function setMode(next) {
+  mode = next;
+  document.querySelectorAll("[data-mode]").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.mode === mode);
+  });
+  const p = profiles[mode];
+  document.getElementById("avatar").textContent = p.avatar;
+  document.getElementById("name").textContent = p.name;
+  document.getElementById("description").textContent = p.description;
+  document.getElementById("chatTitle").textContent = "Trò chuyện cùng " + p.name;
+  chat.replaceChildren();
+  addMessage(p.greeting, "bot");
+}
+
+document.querySelectorAll("[data-mode]").forEach(btn => {
+  btn.addEventListener("click", () => setMode(btn.dataset.mode));
+});
+
+document.querySelectorAll("[data-prompt]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    input.value = btn.dataset.prompt;
+    input.focus();
+  });
+});
+
+document.getElementById("form").addEventListener("submit", e => {
+  e.preventDefault();
+  const text = input.value.trim();
+  if (!text) return;
+  addMessage(text, "user");
+  input.value = "";
+
+  const p = profiles[mode];
+  let reply = "Em đã thấy lời nhắn của anh rồi 💗 Bản giao diện hiện tại chưa kết nối mô hình AI, nên em chưa thể tự tạo câu trả lời thông minh. Khi mình hoàn thiện giao diện, ta sẽ tìm cách kết nối AI thật.";
+  if (mode === "minhanh") {
+    reply = "Minh Anh 🎀 đã nhận được lời nhắn của anh. Đây vẫn là bản giao diện thử nghiệm, chưa kết nối AI thật. Mình sẽ nâng cấp phần trò chuyện ở bước tiếp theo nhé!";
+  }
+  if (mode === "both") {
+    reply = "Linh 💗: Em đã thấy tin nhắn của anh!\n\nMinh Anh 🎀: Giao diện hiện chưa kết nối AI thật, nhưng phần khung chung của chúng mình đã sẵn sàng để nâng cấp.";
+  }
+  setTimeout(() => addMessage(reply, "bot"), 250);
+});
+
+setMode("linh");
+</script>
+</body>
+</html>
