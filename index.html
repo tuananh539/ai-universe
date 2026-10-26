@@ -367,43 +367,96 @@ Không nói đã hoàn thành việc nếu chưa thực sự hoàn thành.`
 };
 
 // Mỗi nhân vật có một kho ký ức riêng trên trình duyệt.
+
+/* ===== AI UNIVERSE: MEMORY ENGINE 2.0 ===== */
+
+const MEMORY_CATEGORIES = [
+  "Cá nhân",
+  "Sở thích",
+  "Công việc",
+  "Lịch trình",
+  "Quan trọng",
+  "Khác"
+];
+
+function normalizeMemory(item) {
+  if (typeof item === "string") {
+    return {
+      text: item,
+      category: "Khác",
+      pinned: false,
+      createdAt: new Date().toISOString()
+    };
+  }
+
+  if (!item || typeof item.text !== "string") return null;
+
+  return {
+    ...item,
+    category: MEMORY_CATEGORIES.includes(item.category)
+      ? item.category
+      : "Khác",
+    pinned: item.pinned === true,
+    createdAt: item.createdAt || new Date().toISOString()
+  };
+}
+
 function getPersonaMemory(persona) {
   const config = personaData[persona];
   if (!config) return [];
 
   try {
     const saved = localStorage.getItem(config.storageKey);
-    const memory = saved ? JSON.parse(saved) : [];
-    return Array.isArray(memory) ? memory : [];
-  } catch {
+    const parsed = saved ? JSON.parse(saved) : [];
+
+    return Array.isArray(parsed)
+      ? parsed.map(normalizeMemory).filter(Boolean)
+      : [];
+  } catch (error) {
+    console.error("Không thể đọc ký ức:", error);
     return [];
   }
 }
 
-function savePersonaMemory(persona, text) {
+function writePersonaMemory(persona, memories) {
   const config = personaData[persona];
-  if (!config || typeof text !== "string") return false;
-
-  const content = text.trim();
-  if (!content) return false;
+  if (!config || !Array.isArray(memories)) return false;
 
   try {
-    const memory = getPersonaMemory(persona);
-    memory.push({
-      text: content,
-      createdAt: new Date().toISOString()
-    });
-
-    // Giữ tối đa 200 mục ký ức cho mỗi nhân vật.
     localStorage.setItem(
       config.storageKey,
-      JSON.stringify(memory.slice(-200))
+      JSON.stringify(memories.slice(-200))
     );
     return true;
   } catch (error) {
     console.error("Không thể lưu ký ức:", error);
     return false;
   }
+}
+
+function savePersonaMemory(persona, text, options = {}) {
+  const config = personaData[persona];
+  if (!config || typeof text !== "string") return false;
+
+  const content = text.trim();
+  if (!content) return false;
+
+  const memories = getPersonaMemory(persona);
+
+  memories.push({
+    id: (crypto.randomUUID
+      ? crypto.randomUUID()
+      : Date.now() + "-" + Math.random().toString(36).slice(2)),
+    text: content,
+    category: MEMORY_CATEGORIES.includes(options.category)
+      ? options.category
+      : "Khác",
+    pinned: options.pinned === true,
+    createdAt: new Date().toISOString(),
+    updatedAt: null
+  });
+
+  return writePersonaMemory(persona, memories);
 }
 
 function deletePersonaMemory(persona) {
@@ -418,21 +471,27 @@ function deletePersonaMemory(persona) {
   }
 }
 
-// Lấy hồ sơ và ký ức đúng nhân vật đang được chọn.
 function getPersonaContext(persona) {
   const config = personaData[persona];
   if (!config) return "";
 
-  const memories = getPersonaMemory(persona);
+  const memories = getPersonaMemory(persona)
+    .sort((a, b) => Number(b.pinned) - Number(a.pinned));
+
+  const memoryText = memories.length
+    ? memories.map((item, index) =>
+        `${index + 1}. [${item.category}]` +
+        `${item.pinned ? " [ĐÃ GHIM]" : ""} ${item.text}`
+      ).join("\n")
+    : "Chưa có ký ức được lưu.";
 
   return [
     config.personality,
     "KÝ ỨC RIÊNG CỦA EM:",
-    memories.length
-      ? memories.map((item, i) => `${i + 1}. ${item.text}`).join("\n")
-      : "Chưa có ký ức được lưu."
+    memoryText
   ].join("\n\n");
 }
+
 
 /* ===== GIAO DIỆN QUẢN LÝ KÝ ỨC ===== */
 (function initMemoryManager() {
