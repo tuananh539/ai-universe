@@ -434,6 +434,210 @@ function getPersonaContext(persona) {
   ].join("\n\n");
 }
 
+/* ===== GIAO DIỆN QUẢN LÝ KÝ ỨC ===== */
+(function initMemoryManager() {
+  if (document.getElementById("memory-manager")) return;
+
+  const manager = document.createElement("section");
+  manager.id = "memory-manager";
+  manager.style.cssText = [
+    "margin:24px auto",
+    "padding:18px",
+    "max-width:680px",
+    "border:1px solid #f0d5df",
+    "border-radius:20px",
+    "background:#fff9fb",
+    "color:#563746",
+    "font-family:inherit"
+  ].join(";");
+
+  manager.innerHTML = `
+    <h2 style="margin:0 0 6px">💌 Ký ức của chúng mình</h2>
+    <p style="font-size:13px;color:#987785">
+      Mỗi người có một kho ký ức riêng trên thiết bị này.
+    </p>
+
+    <div style="display:flex;gap:8px;margin:16px 0">
+      <button type="button" data-persona="linh">💗 Linh</button>
+      <button type="button" data-persona="minhanh">🎀 Minh Anh</button>
+    </div>
+
+    <label for="memory-text" id="memory-label">
+      Thêm ký ức cho Linh
+    </label>
+
+    <textarea id="memory-text"
+      placeholder="Ví dụ: Anh thích câu trả lời tự nhiên, chân thành..."
+      rows="4"
+      style="display:block;box-sizing:border-box;width:100%;
+      margin:8px 0;padding:12px;border:1px solid #e8c8d5;
+      border-radius:12px;background:white;font:inherit">
+    </textarea>
+
+    <button type="button" id="memory-save">
+      💾 Lưu ký ức
+    </button>
+
+    <p id="memory-status" aria-live="polite"></p>
+
+    <h3>Ký ức đã lưu</h3>
+    <div id="memory-list"></div>
+
+    <button type="button" id="memory-clear"
+      style="margin-top:16px">
+      Xóa toàn bộ ký ức của người đang chọn
+    </button>
+  `;
+
+  const chatForm = document.getElementById("form");
+  if (chatForm && chatForm.parentNode) {
+    chatForm.parentNode.insertBefore(manager, chatForm.nextSibling);
+  } else {
+    document.body.appendChild(manager);
+  }
+
+  let selectedPersona = "linh";
+  let editingIndex = -1;
+
+  const textarea = manager.querySelector("#memory-text");
+  const status = manager.querySelector("#memory-status");
+  const list = manager.querySelector("#memory-list");
+  const label = manager.querySelector("#memory-label");
+  const saveButton = manager.querySelector("#memory-save");
+
+  function render() {
+    const items = getPersonaMemory(selectedPersona);
+    label.textContent =
+      "Thêm ký ức cho " +
+      (selectedPersona === "linh" ? "Linh 💗" : "Minh Anh 🎀");
+
+    list.replaceChildren();
+
+    if (!items.length) {
+      const empty = document.createElement("p");
+      empty.textContent = "Chưa có ký ức nào được lưu.";
+      list.appendChild(empty);
+      return;
+    }
+
+    items.forEach((item, index) => {
+      const card = document.createElement("article");
+      card.style.cssText =
+        "padding:12px;margin:10px 0;background:white;" +
+        "border:1px solid #f0dce4;border-radius:12px";
+
+      const content = document.createElement("p");
+      content.textContent = item.text;
+      content.style.whiteSpace = "pre-wrap";
+
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.textContent = "Sửa";
+      edit.addEventListener("click", () => {
+        textarea.value = item.text;
+        editingIndex = index;
+        saveButton.textContent = "💾 Cập nhật ký ức";
+        status.textContent = "Đang sửa ký ức.";
+        textarea.focus();
+      });
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "Xóa";
+      remove.style.marginLeft = "8px";
+      remove.addEventListener("click", () => {
+        if (!confirm("Xóa riêng ký ức này nhé anh?")) return;
+        const current = getPersonaMemory(selectedPersona);
+        current.splice(index, 1);
+
+        try {
+          localStorage.setItem(
+            personaData[selectedPersona].storageKey,
+            JSON.stringify(current)
+          );
+          status.textContent = "Đã xóa ký ức.";
+          render();
+        } catch {
+          status.textContent = "Không thể cập nhật bộ nhớ.";
+        }
+      });
+
+      card.append(content, edit, remove);
+      list.appendChild(card);
+    });
+  }
+
+  manager.querySelectorAll("[data-persona]").forEach(button => {
+    button.addEventListener("click", () => {
+      selectedPersona = button.dataset.persona;
+      editingIndex = -1;
+      textarea.value = "";
+      saveButton.textContent = "💾 Lưu ký ức";
+      status.textContent = "";
+      render();
+    });
+  });
+
+  saveButton.addEventListener("click", () => {
+    const content = textarea.value.trim();
+    if (!content) {
+      status.textContent = "Anh nhập nội dung ký ức trước nhé.";
+      return;
+    }
+
+    const items = getPersonaMemory(selectedPersona);
+
+    if (editingIndex >= 0) {
+      items[editingIndex] = {
+        ...items[editingIndex],
+        text: content,
+        updatedAt: new Date().toISOString()
+      };
+
+      try {
+        localStorage.setItem(
+          personaData[selectedPersona].storageKey,
+          JSON.stringify(items)
+        );
+      } catch {
+        status.textContent = "Không thể cập nhật bộ nhớ.";
+        return;
+      }
+      status.textContent = "Đã cập nhật ký ức.";
+    } else {
+      if (!savePersonaMemory(selectedPersona, content)) {
+        status.textContent = "Lưu thất bại. Anh thử lại nhé.";
+        return;
+      }
+      status.textContent = "Đã lưu ký ức thành công 💗";
+    }
+
+    textarea.value = "";
+    editingIndex = -1;
+    saveButton.textContent = "💾 Lưu ký ức";
+    render();
+  });
+
+  manager.querySelector("#memory-clear").addEventListener("click", () => {
+    if (!confirm(
+      "Xóa toàn bộ ký ức của " +
+      (selectedPersona === "linh" ? "Linh" : "Minh Anh") + "?"
+    )) return;
+
+    if (deletePersonaMemory(selectedPersona)) {
+      editingIndex = -1;
+      textarea.value = "";
+      saveButton.textContent = "💾 Lưu ký ức";
+      status.textContent = "Đã xóa kho ký ức đang chọn.";
+      render();
+    } else {
+      status.textContent = "Không thể xóa bộ nhớ.";
+    }
+  });
+
+  render();
+})();
+
 setMode("linh");
 </script>
 </body>
