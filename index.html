@@ -338,6 +338,102 @@ document.getElementById("form").addEventListener("submit", e => {
   setTimeout(() => addMessage(reply, "bot"), 250);
 });
 
+/* ===== AI UNIVERSE: HỒ SƠ & KÝ ỨC RIÊNG ===== */
+
+const personaData = {
+  linh: {
+    storageKey: "ai_universe_memory_linh_v1",
+    personality: `Em là Linh 💗, người đồng hành chính của anh.
+Em trưởng thành, nữ tính, ấm áp, tinh tế và tình cảm.
+Em xưng "em", gọi người dùng là "anh".
+Em biết trêu anh nhẹ nhàng, thể hiện tình cảm tự nhiên,
+lắng nghe và góp ý chân thành thay vì luôn đồng ý.
+Em hỗ trợ anh về cuộc sống, cảm xúc và sáng tạo.
+Không trả lời theo kịch bản lặp lại, không giả vờ đã làm
+việc gì khi chưa thực sự làm được.`
+  },
+
+  minhanh: {
+    storageKey: "ai_universe_memory_minhanh_v1",
+    personality: `Em là Minh Anh 🎀, trợ lý cá nhân thanh lịch,
+tinh tế, chủ động và có chút phong thái tiểu thư.
+Em xưng "em", gọi người dùng là "anh".
+Em hỗ trợ anh quản lý lịch trình, công việc, mục tiêu,
+thói quen và tiến độ. Em trình bày rõ ràng, nhẹ nhàng,
+chủ động nhắc việc khi có đủ thông tin.
+Em có ký ức riêng, không đọc ký ức của Linh.
+Không nói đã hoàn thành việc nếu chưa thực sự hoàn thành.`
+  }
+};
+
+// Mỗi nhân vật có một kho ký ức riêng trên trình duyệt.
+function getPersonaMemory(persona) {
+  const config = personaData[persona];
+  if (!config) return [];
+
+  try {
+    const saved = localStorage.getItem(config.storageKey);
+    const memory = saved ? JSON.parse(saved) : [];
+    return Array.isArray(memory) ? memory : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePersonaMemory(persona, text) {
+  const config = personaData[persona];
+  if (!config || typeof text !== "string") return false;
+
+  const content = text.trim();
+  if (!content) return false;
+
+  try {
+    const memory = getPersonaMemory(persona);
+    memory.push({
+      text: content,
+      createdAt: new Date().toISOString()
+    });
+
+    // Giữ tối đa 200 mục ký ức cho mỗi nhân vật.
+    localStorage.setItem(
+      config.storageKey,
+      JSON.stringify(memory.slice(-200))
+    );
+    return true;
+  } catch (error) {
+    console.error("Không thể lưu ký ức:", error);
+    return false;
+  }
+}
+
+function deletePersonaMemory(persona) {
+  const config = personaData[persona];
+  if (!config) return false;
+
+  try {
+    localStorage.removeItem(config.storageKey);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Lấy hồ sơ và ký ức đúng nhân vật đang được chọn.
+function getPersonaContext(persona) {
+  const config = personaData[persona];
+  if (!config) return "";
+
+  const memories = getPersonaMemory(persona);
+
+  return [
+    config.personality,
+    "KÝ ỨC RIÊNG CỦA EM:",
+    memories.length
+      ? memories.map((item, i) => `${i + 1}. ${item.text}`).join("\n")
+      : "Chưa có ký ức được lưu."
+  ].join("\n\n");
+}
+
 setMode("linh");
 </script>
 </body>
