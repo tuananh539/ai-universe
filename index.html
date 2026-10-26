@@ -493,210 +493,662 @@ function getPersonaContext(persona) {
 }
 
 
-/* ===== GIAO DIỆN QUẢN LÝ KÝ ỨC ===== */
+//* ===== GIAO DIỆN QUẢN LÝ KÝ ỨC 2.0 ===== */
 (function initMemoryManager() {
   if (document.getElementById("memory-manager")) return;
 
   const manager = document.createElement("section");
   manager.id = "memory-manager";
-  manager.style.cssText = [
-    "margin:24px auto",
-    "padding:18px",
-    "max-width:680px",
-    "border:1px solid #f0d5df",
-    "border-radius:20px",
-    "background:#fff9fb",
-    "color:#563746",
-    "font-family:inherit"
-  ].join(";");
 
-  manager.innerHTML = `
-    <h2 style="margin:0 0 6px">💌 Ký ức của chúng mình</h2>
-    <p style="font-size:13px;color:#987785">
-      Mỗi người có một kho ký ức riêng trên thiết bị này.
-    </p>
-
-    <div style="display:flex;gap:8px;margin:16px 0">
-      <button type="button" data-persona="linh">💗 Linh</button>
-      <button type="button" data-persona="minhanh">🎀 Minh Anh</button>
-    </div>
-
-    <label for="memory-text" id="memory-label">
-      Thêm ký ức cho Linh
-    </label>
-
-    <textarea id="memory-text"
-      placeholder="Ví dụ: Anh thích câu trả lời tự nhiên, chân thành..."
-      rows="4"
-      style="display:block;box-sizing:border-box;width:100%;
-      margin:8px 0;padding:12px;border:1px solid #e8c8d5;
-      border-radius:12px;background:white;font:inherit">
-    </textarea>
-
-    <button type="button" id="memory-save">
-      💾 Lưu ký ức
-    </button>
-
-    <p id="memory-status" aria-live="polite"></p>
-
-    <h3>Ký ức đã lưu</h3>
-    <div id="memory-list"></div>
-
-    <button type="button" id="memory-clear"
-      style="margin-top:16px">
-      Xóa toàn bộ ký ức của người đang chọn
-    </button>
+  manager.style.cssText = `
+    margin:24px auto;
+    padding:18px;
+    max-width:900px;
+    border:1px solid #f0c7dc;
+    border-radius:20px;
+    background:#fff9fc;
+    color:#493341;
+    font-family:inherit;
+    box-sizing:border-box;
   `;
 
-  const chatForm = document.getElementById("form");
+  manager.innerHTML = `
+    <style>
+      #memory-manager * { box-sizing:border-box; }
+      #memory-manager .mm-title {
+        font-size:21px; font-weight:800; margin:0 0 6px;
+      }
+      #memory-manager .mm-sub {
+        color:#8b7180; font-size:13px; line-height:1.5;
+        margin:0 0 16px;
+      }
+      #memory-manager .mm-tabs {
+        display:flex; gap:8px; margin-bottom:14px;
+      }
+      #memory-manager button,
+      #memory-manager input,
+      #memory-manager select,
+      #memory-manager textarea {
+        font:inherit; font-size:14px;
+      }
+      #memory-manager button {
+        border:1px solid #edc3d8;
+        background:#fff; color:#713e59;
+        border-radius:11px; padding:10px 12px;
+        cursor:pointer; min-height:40px;
+      }
+      #memory-manager button:focus-visible,
+      #memory-manager input:focus-visible,
+      #memory-manager select:focus-visible,
+      #memory-manager textarea:focus-visible {
+        outline:2px solid #c85b91; outline-offset:2px;
+      }
+      #memory-manager .mm-tabs button { flex:1; }
+      #memory-manager .mm-tabs button.active,
+      #memory-manager .mm-primary {
+        background:#d95d99; color:white;
+        border-color:#d95d99;
+      }
+      #memory-manager .mm-field {
+        display:block; width:100%; margin:8px 0;
+        padding:11px 12px; border:1px solid #ead3df;
+        border-radius:11px; background:white; color:#493341;
+      }
+      #memory-manager textarea.mm-field {
+        min-height:90px; resize:vertical;
+      }
+      #memory-manager .mm-grid {
+        display:grid; grid-template-columns:1fr 1fr; gap:8px;
+      }
+      #memory-manager .mm-actions {
+        display:flex; flex-wrap:wrap; gap:7px; margin-top:10px;
+      }
+      #memory-manager .mm-card {
+        border:1px solid #f0d8e4; border-radius:14px;
+        background:white; padding:13px; margin-top:10px;
+        overflow-wrap:anywhere;
+      }
+      #memory-manager .mm-card.pinned {
+        border-color:#d95d99; background:#fff4fa;
+      }
+      #memory-manager .mm-meta {
+        font-size:12px; color:#977b8a; margin-bottom:8px;
+      }
+      #memory-manager .mm-text {
+        white-space:pre-wrap; line-height:1.55;
+      }
+      #memory-manager .mm-count {
+        font-size:13px; color:#8b7180; margin:12px 0 4px;
+      }
+      #memory-manager .mm-empty {
+        padding:18px 8px; text-align:center;
+        color:#977b8a; font-size:14px;
+      }
+      #memory-manager .mm-status {
+        margin-top:10px; font-size:13px; line-height:1.5;
+      }
+      #memory-manager .mm-danger {
+        color:#a52c50; border-color:#e9a8bd;
+      }
+      #memory-manager .mm-section {
+        margin-top:18px; padding-top:16px;
+        border-top:1px solid #f0d8e4;
+      }
+      #memory-manager .mm-check {
+        display:flex; align-items:center; gap:8px;
+        font-size:14px; margin:10px 0;
+      }
+      @media(max-width:420px) {
+        #memory-manager { padding:13px; }
+        #memory-manager .mm-grid { grid-template-columns:1fr; }
+        #memory-manager .mm-actions button { flex:1; }
+      }
+    </style>
+
+    <h2 class="mm-title">💗 Kho ký ức AI Universe</h2>
+    <p class="mm-sub">
+      Quản lý ký ức riêng của Linh và Minh Anh.
+      Dữ liệu được lưu trên trình duyệt của thiết bị này.
+    </p>
+
+    <div class="mm-tabs">
+      <button type="button" data-persona="linh" class="active">
+        💗 Linh
+      </button>
+      <button type="button" data-persona="minhanh">
+        🎀 Minh Anh
+      </button>
+    </div>
+
+    <form id="mm-form">
+      <label for="mm-text"><strong>Nội dung ký ức</strong></label>
+      <textarea id="mm-text" class="mm-field"
+        maxlength="5000" required
+        placeholder="Ví dụ: Anh thích làm nhạc vào buổi tối..."></textarea>
+
+      <label for="mm-category"><strong>Danh mục</strong></label>
+      <select id="mm-category" class="mm-field">
+        <option>Cá nhân</option>
+        <option>Sở thích</option>
+        <option>Công việc</option>
+        <option>Lịch trình</option>
+        <option>Quan trọng</option>
+        <option selected>Khác</option>
+      </select>
+
+      <label class="mm-check">
+        <input id="mm-pinned" type="checkbox">
+        📌 Ghim ký ức quan trọng
+      </label>
+
+      <div class="mm-actions">
+        <button type="submit" class="mm-primary" id="mm-save">
+          ＋ Thêm ký ức
+        </button>
+        <button type="button" id="mm-cancel" hidden>
+          Hủy sửa
+        </button>
+      </div>
+    </form>
+
+    <div class="mm-section">
+      <label for="mm-search"><strong>🔎 Tìm kiếm ký ức</strong></label>
+      <input id="mm-search" class="mm-field"
+        type="search" placeholder="Nhập từ khóa...">
+
+      <div class="mm-grid">
+        <select id="mm-filter" class="mm-field"
+          aria-label="Lọc theo danh mục">
+          <option value="">Tất cả danh mục</option>
+          <option>Cá nhân</option>
+          <option>Sở thích</option>
+          <option>Công việc</option>
+          <option>Lịch trình</option>
+          <option>Quan trọng</option>
+          <option>Khác</option>
+        </select>
+
+        <select id="mm-sort" class="mm-field"
+          aria-label="Sắp xếp ký ức">
+          <option value="newest">Mới nhất trước</option>
+          <option value="oldest">Cũ nhất trước</option>
+          <option value="pinned">Ký ức đã ghim trước</option>
+        </select>
+      </div>
+
+      <div id="mm-count" class="mm-count"></div>
+      <div id="mm-list" aria-live="polite"></div>
+    </div>
+
+    <div class="mm-section">
+      <strong>🧰 Sao lưu và khôi phục</strong>
+      <p class="mm-sub">
+        Bản sao lưu chứa dữ liệu của cả hai nhân vật.
+        Hãy giữ file JSON ở nơi an toàn.
+      </p>
+      <div class="mm-actions">
+        <button type="button" id="mm-export">
+          Xuất bản sao lưu JSON
+        </button>
+        <button type="button" id="mm-copy">
+          Hiện JSON để sao chép
+        </button>
+      </div>
+
+      <label for="mm-import-file" class="mm-check">
+        Chọn file JSON để khôi phục
+      </label>
+      <input id="mm-import-file" class="mm-field"
+        type="file" accept=".json,application/json">
+
+      <label class="mm-check">
+        <input id="mm-merge" type="checkbox" checked>
+        Gộp với ký ức hiện có, không ghi đè
+      </label>
+
+      <button type="button" id="mm-import" class="mm-primary">
+        Khôi phục bản sao lưu
+      </button>
+
+      <textarea id="mm-json" class="mm-field"
+        hidden rows="8" readonly
+        aria-label="Nội dung JSON sao lưu"></textarea>
+    </div>
+
+    <div class="mm-section">
+      <strong>⚠️ Xóa dữ liệu</strong>
+      <p class="mm-sub">
+        Xóa toàn bộ chỉ tác động đến nhân vật đang chọn.
+        Hãy xuất bản sao lưu trước nếu cần giữ dữ liệu.
+      </p>
+      <button type="button" id="mm-clear" class="mm-danger">
+        Xóa toàn bộ ký ức của nhân vật này
+      </button>
+    </div>
+
+    <div id="mm-status" class="mm-status" role="status"
+      aria-live="polite"></div>
+  `;
+
+  // Chèn giao diện ngay sau biểu mẫu chat nếu có.
+  const chatForm = document.querySelector("form");
   if (chatForm && chatForm.parentNode) {
-    chatForm.parentNode.insertBefore(manager, chatForm.nextSibling);
+    chatForm.insertAdjacentElement("afterend", manager);
   } else {
     document.body.appendChild(manager);
   }
 
-  let selectedPersona = "linh";
-  let editingIndex = -1;
+  const $ = (selector) => manager.querySelector(selector);
 
-  const textarea = manager.querySelector("#memory-text");
-  const status = manager.querySelector("#memory-status");
-  const list = manager.querySelector("#memory-list");
-  const label = manager.querySelector("#memory-label");
-  const saveButton = manager.querySelector("#memory-save");
+  let currentPersona = "linh";
+  let editingId = null;
+
+  const status = (message, error = false) => {
+    const node = $("#mm-status");
+    node.textContent = message;
+    node.style.color = error ? "#a52c50" : "#477a57";
+  };
+
+  const escapeHTML = (value) =>
+    String(value).replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[char]);
+
+  const makeId = () =>
+    globalThis.crypto?.randomUUID
+      ? globalThis.crypto.randomUUID()
+      : Date.now() + "-" + Math.random().toString(36).slice(2);
+
+  function resetForm() {
+    editingId = null;
+    $("#mm-form").reset();
+    $("#mm-category").value = "Khác";
+    $("#mm-save").textContent = "＋ Thêm ký ức";
+    $("#mm-cancel").hidden = true;
+  }
 
   function render() {
-    const items = getPersonaMemory(selectedPersona);
-    label.textContent =
-      "Thêm ký ức cho " +
-      (selectedPersona === "linh" ? "Linh 💗" : "Minh Anh 🎀");
+    const memories = getPersonaMemory(currentPersona);
+    const keyword = $("#mm-search").value.trim().toLocaleLowerCase();
+    const category = $("#mm-filter").value;
+    const sort = $("#mm-sort").value;
 
-    list.replaceChildren();
+    const filtered = memories
+      .map((memory, index) => ({ memory, index }))
+      .filter(({ memory }) => {
+        const matchesText = memory.text
+          .toLocaleLowerCase()
+          .includes(keyword);
+        const matchesCategory = !category ||
+          memory.category === category;
+        return matchesText && matchesCategory;
+      })
+      .sort((a, b) => {
+        if (sort === "pinned" &&
+            a.memory.pinned !== b.memory.pinned) {
+          return Number(b.memory.pinned) -
+            Number(a.memory.pinned);
+        }
 
-    if (!items.length) {
-      const empty = document.createElement("p");
-      empty.textContent = "Chưa có ký ức nào được lưu.";
-      list.appendChild(empty);
+        if (sort === "oldest") {
+          return new Date(a.memory.createdAt) -
+            new Date(b.memory.createdAt);
+        }
+
+        return new Date(b.memory.createdAt) -
+          new Date(a.memory.createdAt);
+      });
+
+    $("#mm-count").textContent =
+      `Tổng ${memories.length} ký ức · Hiển thị ${filtered.length}`;
+
+    if (!filtered.length) {
+      $("#mm-list").innerHTML =
+        '<div class="mm-empty">Chưa tìm thấy ký ức nào 🌷</div>';
       return;
     }
 
-    items.forEach((item, index) => {
-      const card = document.createElement("article");
-      card.style.cssText =
-        "padding:12px;margin:10px 0;background:white;" +
-        "border:1px solid #f0dce4;border-radius:12px";
+    $("#mm-list").innerHTML = filtered.map(({ memory, index }) => {
+      const date = new Date(memory.createdAt);
+      const dateText = Number.isNaN(date.getTime())
+        ? ""
+        : date.toLocaleString("vi-VN");
 
-      const content = document.createElement("p");
-      content.textContent = item.text;
-      content.style.whiteSpace = "pre-wrap";
-
-      const edit = document.createElement("button");
-      edit.type = "button";
-      edit.textContent = "Sửa";
-      edit.addEventListener("click", () => {
-        textarea.value = item.text;
-        editingIndex = index;
-        saveButton.textContent = "💾 Cập nhật ký ức";
-        status.textContent = "Đang sửa ký ức.";
-        textarea.focus();
-      });
-
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.textContent = "Xóa";
-      remove.style.marginLeft = "8px";
-      remove.addEventListener("click", () => {
-        if (!confirm("Xóa riêng ký ức này nhé anh?")) return;
-        const current = getPersonaMemory(selectedPersona);
-        current.splice(index, 1);
-
-        try {
-          localStorage.setItem(
-            personaData[selectedPersona].storageKey,
-            JSON.stringify(current)
-          );
-          status.textContent = "Đã xóa ký ức.";
-          render();
-        } catch {
-          status.textContent = "Không thể cập nhật bộ nhớ.";
-        }
-      });
-
-      card.append(content, edit, remove);
-      list.appendChild(card);
-    });
+      return `
+        <article class="mm-card ${memory.pinned ? "pinned" : ""}">
+          <div class="mm-meta">
+            ${memory.pinned ? "📌 Đã ghim · " : ""}
+            ${escapeHTML(memory.category || "Khác")}
+            ${dateText ? " · " + escapeHTML(dateText) : ""}
+          </div>
+          <div class="mm-text">${escapeHTML(memory.text)}</div>
+          <div class="mm-actions">
+            <button type="button" data-action="pin"
+              data-index="${index}">
+              ${memory.pinned ? "Bỏ ghim" : "📌 Ghim"}
+            </button>
+            <button type="button" data-action="edit"
+              data-index="${index}">Sửa</button>
+            <button type="button" class="mm-danger"
+              data-action="delete" data-index="${index}">
+              Xóa
+            </button>
+          </div>
+        </article>
+      `;
+    }).join("");
   }
 
-  manager.querySelectorAll("[data-persona]").forEach(button => {
+  manager.querySelectorAll("[data-persona]").forEach((button) => {
     button.addEventListener("click", () => {
-      selectedPersona = button.dataset.persona;
-      editingIndex = -1;
-      textarea.value = "";
-      saveButton.textContent = "💾 Lưu ký ức";
-      status.textContent = "";
+      currentPersona = button.dataset.persona;
+      editingId = null;
+
+      manager.querySelectorAll("[data-persona]").forEach((tab) => {
+        tab.classList.toggle("active", tab === button);
+      });
+
+      resetForm();
       render();
+      status(`Đang quản lý ký ức của ${
+        currentPersona === "linh" ? "Linh 💗" : "Minh Anh 🎀"
+      }.`);
     });
   });
 
-  saveButton.addEventListener("click", () => {
-    const content = textarea.value.trim();
-    if (!content) {
-      status.textContent = "Anh nhập nội dung ký ức trước nhé.";
+  $("#mm-form").addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const text = $("#mm-text").value.trim();
+    const category = $("#mm-category").value;
+    const pinned = $("#mm-pinned").checked;
+
+    if (!text) {
+      status("Anh nhập nội dung ký ức trước nhé.", true);
       return;
     }
 
-    const items = getPersonaMemory(selectedPersona);
+    if (editingId !== null) {
+      const memories = getPersonaMemory(currentPersona);
+      const index = memories.findIndex((item) =>
+        String(item.id) === String(editingId)
+      );
 
-    if (editingIndex >= 0) {
-      items[editingIndex] = {
-        ...items[editingIndex],
-        text: content,
+      if (index < 0) {
+        status("Không tìm thấy ký ức cần sửa.", true);
+        resetForm();
+        render();
+        return;
+      }
+
+      memories[index] = {
+        ...memories[index],
+        text,
+        category,
+        pinned,
         updatedAt: new Date().toISOString()
       };
 
-      try {
-        localStorage.setItem(
-          personaData[selectedPersona].storageKey,
-          JSON.stringify(items)
-        );
-      } catch {
-        status.textContent = "Không thể cập nhật bộ nhớ.";
+      if (!writePersonaMemory(currentPersona, memories)) {
+        status("Lưu thất bại. Anh thử lại nhé.", true);
         return;
       }
-      status.textContent = "Đã cập nhật ký ức.";
+
+      status("Đã cập nhật ký ức thành công 💗");
     } else {
-      if (!savePersonaMemory(selectedPersona, content)) {
-        status.textContent = "Lưu thất bại. Anh thử lại nhé.";
+      if (!savePersonaMemory(currentPersona, text, {
+        category,
+        pinned
+      })) {
+        status("Lưu thất bại. Anh thử lại nhé.", true);
         return;
       }
-      status.textContent = "Đã lưu ký ức thành công 💗";
+
+      status("Đã thêm ký ức mới thành công 💗");
     }
 
-    textarea.value = "";
-    editingIndex = -1;
-    saveButton.textContent = "💾 Lưu ký ức";
+    resetForm();
     render();
   });
 
-  manager.querySelector("#memory-clear").addEventListener("click", () => {
-    if (!confirm(
-      "Xóa toàn bộ ký ức của " +
-      (selectedPersona === "linh" ? "Linh" : "Minh Anh") + "?"
-    )) return;
+  $("#mm-cancel").addEventListener("click", () => {
+    resetForm();
+    status("Đã hủy thao tác sửa.");
+  });
 
-    if (deletePersonaMemory(selectedPersona)) {
-      editingIndex = -1;
-      textarea.value = "";
-      saveButton.textContent = "💾 Lưu ký ức";
-      status.textContent = "Đã xóa kho ký ức đang chọn.";
+  $("#mm-list").addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+
+    const index = Number(button.dataset.index);
+    const memories = getPersonaMemory(currentPersona);
+    const memory = memories[index];
+
+    if (!memory) {
+      status("Không tìm thấy ký ức này.", true);
       render();
-    } else {
-      status.textContent = "Không thể xóa bộ nhớ.";
+      return;
+    }
+
+    const action = button.dataset.action;
+
+    if (action === "edit") {
+      editingId = memory.id ?? null;
+
+      // Tạo ID cho ký ức cũ chưa có ID để sửa được an toàn.
+      if (editingId === null) {
+        memory.id = makeId();
+        editingId = memory.id;
+
+        if (!writePersonaMemory(currentPersona, memories)) {
+          status("Không thể chuẩn bị ký ức để sửa.", true);
+          return;
+        }
+      }
+
+      $("#mm-text").value = memory.text;
+      $("#mm-category").value = memory.category || "Khác";
+      $("#mm-pinned").checked = memory.pinned === true;
+      $("#mm-save").textContent = "Lưu thay đổi";
+      $("#mm-cancel").hidden = false;
+      $("#mm-text").focus();
+      status("Đang sửa ký ức. Anh lưu lại khi hoàn tất nhé.");
+      return;
+    }
+
+    if (action === "pin") {
+      memories[index] = {
+        ...memory,
+        pinned: !memory.pinned,
+        updatedAt: new Date().toISOString()
+      };
+
+      status(writePersonaMemory(currentPersona, memories)
+        ? (memories[index].pinned ? "Đã ghim ký ức 📌" : "Đã bỏ ghim ký ức.")
+        : "Không lưu được thay đổi.", !writePersonaMemory(currentPersona, memories));
+      render();
+      return;
+    }
+
+    if (action === "delete") {
+      if (!confirm("Anh có chắc muốn xóa riêng ký ức này không?")) {
+        return;
+      }
+
+      memories.splice(index, 1);
+      const ok = writePersonaMemory(currentPersona, memories);
+      status(ok ? "Đã xóa ký ức." : "Xóa thất bại.", !ok);
+      render();
     }
   });
 
-  render();
-})();
+  $("#mm-search").addEventListener("input", render);
+  $("#mm-filter").addEventListener("change", render);
+  $("#mm-sort").addEventListener("change", render);
 
+  function buildBackup() {
+    return {
+      app: "AI Universe",
+      version: 2,
+      exportedAt: new Date().toISOString(),
+      memories: {
+        linh: getPersonaMemory("linh"),
+        minhanh: getPersonaMemory("minhanh")
+      }
+    };
+  }
+
+  $("#mm-export").addEventListener("click", () => {
+    const json = JSON.stringify(buildBackup(), null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "ai-universe-memory-backup.json";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    status("Đã tạo yêu cầu xuất bản sao lưu. Kiểm tra mục Tệp/Tải về trên iPhone.");
+  });
+
+  $("#mm-copy").addEventListener("click", () => {
+    $("#mm-json").value = JSON.stringify(buildBackup(), null, 2);
+    $("#mm-json").hidden = false;
+    $("#mm-json").focus();
+    status("JSON đã hiện bên dưới. Anh có thể chọn và sao chép nội dung.");
+  });
+
+  $("#mm-import").addEventListener("click", async () => {
+    const file = $("#mm-import-file").files[0];
+
+    if (!file) {
+      status("Anh hãy chọn file JSON trước nhé.", true);
+      return;
+    }
+
+    let backup;
+
+    try {
+      backup = JSON.parse(await file.text());
+    } catch {
+      status("File không phải JSON hợp lệ.", true);
+      return;
+    }
+
+    const source = backup && backup.memories;
+
+    if (!source ||
+        !Array.isArray(source.linh) ||
+        !Array.isArray(source.minhanh)) {
+      status("Cấu trúc bản sao lưu không hợp lệ. Không có dữ liệu nào bị thay đổi.", true);
+      return;
+    }
+
+    const clean = (items) => items.map(normalizeMemory);
+
+    const linhIncoming = clean(source.linh);
+    const minhanhIncoming = clean(source.minhanh);
+
+    if (linhIncoming.some((item) => !item) ||
+        minhanhIncoming.some((item) => !item)) {
+      status("Bản sao lưu có mục ký ức lỗi. Không có dữ liệu nào bị thay đổi.", true);
+      return;
+    }
+
+    const merge = $("#mm-merge").checked;
+
+    const actionText = merge
+      ? "gộp ký ức trong file vào dữ liệu hiện tại"
+      : "THAY THẾ toàn bộ ký ức hiện tại của cả Linh và Minh Anh";
+
+    if (!confirm(`Anh xác nhận ${actionText} chứ? Nên xuất bản sao lưu hiện tại trước khi tiếp tục.`)) {
+      return;
+    }
+
+    const oldLinh = localStorage.getItem(personaData.linh.storageKey);
+    const oldMinhAnh = localStorage.getItem(personaData.minhanh.storageKey);
+
+    try {
+      const combine = (existing, incoming) => {
+        if (!merge) return incoming;
+
+        const result = [...existing];
+        const seen = new Set(result.map((item) =>
+          `${item.text}\u0000${item.category}`
+        ));
+
+        incoming.forEach((item) => {
+          const key = `${item.text}\u0000${item.category}`;
+          if (!seen.has(key)) {
+            result.push({ ...item, id: item.id || makeId() });
+            seen.add(key);
+          }
+        });
+
+        return result.slice(-200);
+      };
+
+      const newLinh = combine(getPersonaMemory("linh"), linhIncoming);
+      const newMinhAnh = combine(getPersonaMemory("minhanh"), minhanhIncoming);
+
+      if (!writePersonaMemory("linh", newLinh)) {
+        throw new Error("Không lưu được kho Linh.");
+      }
+
+      if (!writePersonaMemory("minhanh", newMinhAnh)) {
+        throw new Error("Không lưu được kho Minh Anh.");
+      }
+
+      $("#mm-import-file").value = "";
+      render();
+      status("Khôi phục bản sao lưu thành công 💗");
+    } catch (error) {
+      // Khôi phục dữ liệu cũ nếu một trong hai kho lưu thất bại.
+      try {
+        if (oldLinh === null) {
+          localStorage.removeItem(personaData.linh.storageKey);
+        } else {
+          localStorage.setItem(personaData.linh.storageKey, oldLinh);
+        }
+
+        if (oldMinhAnh === null) {
+          localStorage.removeItem(personaData.minhanh.storageKey);
+        } else {
+          localStorage.setItem(personaData.minhanh.storageKey, oldMinhAnh);
+        }
+      } catch (rollbackError) {
+        console.error("Không thể khôi phục dữ liệu trước đó:", rollbackError);
+      }
+
+      console.error(error);
+      status("Khôi phục thất bại. Hệ thống đã thử khôi phục dữ liệu trước đó.", true);
+      render();
+    }
+  });
+
+  $("#mm-clear").addEventListener("click", () => {
+    const name = currentPersona === "linh" ? "Linh" : "Minh Anh";
+
+    if (!confirm(`Xóa TOÀN BỘ ký ức của ${name}? Hành động này không thể hoàn tác nếu chưa sao lưu.`)) {
+      return;
+    }
+
+    const ok = deletePersonaMemory(currentPersona);
+    resetForm();
+    render();
+    status(ok ? `Đã xóa kho ký ức của ${name}.` : "Không thể xóa kho ký ức.", !ok);
+  });
+
+  render();
+  status("Kho ký ức đã sẵn sàng 💗");
+})();
 setMode("linh");
 </script>
 </body>
